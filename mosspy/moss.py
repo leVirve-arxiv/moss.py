@@ -8,50 +8,23 @@ try:
 except ImportError:
     from urllib2 import urlopen
 
+
 class Moss:
-    languages = (
-        "c",
-        "cc",
-        "java",
-        "ml",
-        "pascal",
-        "ada",
-        "lisp",
-        "scheme",
-        "haskell",
-        "fortran",
-        "ascii",
-        "vhdl",
-        "perl",
-        "matlab",
-        "python",
-        "mips",
-        "prolog",
-        "spice",
-        "vb",
-        "csharp",
-        "modula2",
-        "a8086",
-        "javascript",
-        "plsql")
+    languages = ('c', 'cc', 'java', 'ml', 'pascal', 'ada', 'lisp', 'scheme',
+                 'haskell', 'fortran', 'ascii', 'vhdl', 'perl', 'matlab',
+                 'python', 'mips', 'prolog', 'spice', 'vb', 'csharp',
+                 'modula2', 'a8086', 'javascript', 'plsql')
     server = 'moss.stanford.edu'
     port = 7690
 
-    def __init__(self, user_id, language="c"):
+    def __init__(self, user_id, language='c'):
         self.user_id = user_id
-        self.options = {
-            "l": "c",
-            "m": 10,
-            "d": 0,
-            "x": 0,
-            "c": "",
-            "n": 250
-        }
+        self.options = {'l': 'c', 'm': 10, 'd': 0, 'x': 0, 'c': '', 'n': 250}
         self.base_files = []
         self.files = []
 
         if language in self.languages:
-            self.options["l"] = language
+            self.options['l'] = language
 
     def setIgnoreLimit(self, limit):
         self.options['m'] = limit
@@ -63,23 +36,28 @@ class Moss:
         if n > 1:
             self.options['n'] = n
 
-    def setDirectoryMode(self, mode):
-        self.options['d'] = mode
+    @property
+    def directory_mode(self):
+        return self.options['d'] == 1
+
+    @directory_mode.setter
+    def directory_mode(self, mode):
+        self.options['d'] = 1 if mode else 0
 
     def setExperimentalServer(self, opt):
         self.options['x'] = opt
 
-    def addBaseFile(self, file_path, display_name=None):
+    def add_base_file(self, file_path, display_name=None):
         if os.path.isfile(file_path):
             self.base_files.append((file_path, display_name))
         else:
-            raise Exception("addBaseFile({}) => File Not Found".format(file_path))
+            raise Exception('Base file Not Found => {}'.format(file_path))
 
-    def addFile(self, file_path, display_name=None):
+    def add_file(self, file_path, display_name=None):
         if os.path.isfile(file_path):
             self.files.append((file_path, display_name))
         else:
-            raise Exception("addFile({}) => File Not Found".format(file_path))
+            raise Exception('addFile({}) => File Not Found'.format(file_path))
 
     def addFilesByWildcard(self, wildcard):
         for file in glob.glob(wildcard):
@@ -88,59 +66,55 @@ class Moss:
     def getLanguages(self):
         return self.languages
 
-    def uploadFile(self, s, file_path, display_name, file_id):
+    def upload_file(self, s, file_path, display_name, file_id=0):
         if display_name is None:
             # If no display name added by user, default to file path
-            display_name = file_path.replace(" ", "_")
+            display_name = file_path.replace(' ', '_')
 
         size = os.path.getsize(file_path)
-        message = "file {0} {1} {2} {3}\n".format(
-            file_id,
-            self.options['l'],
-            size,
-            display_name
-        )
+        message = 'file {0} {1} {2} {3}\n'.format(file_id, self.options['l'],
+                                                  size, display_name)
         s.send(message.encode())
-        content = open(file_path, "rb").read(size)
+        content = open(file_path, 'rb').read(size)
         s.send(content)
 
     def send(self):
-        s = socket.socket() 
+        s = socket.socket()
         s.connect((self.server, self.port))
 
-        s.send("moss {}\n".format(self.user_id).encode())
-        s.send("directory {}\n".format(self.options['d']).encode())
-        s.send("X {}\n".format(self.options['x']).encode())
-        s.send("maxmatches {}\n".format(self.options['m']).encode())
-        s.send("show {}\n".format(self.options['n']).encode())
+        s.send('moss {}\n'.format(self.user_id).encode())
+        s.send('directory {}\n'.format(self.options['d']).encode())
+        s.send('X {}\n'.format(self.options['x']).encode())
+        s.send('maxmatches {}\n'.format(self.options['m']).encode())
+        s.send('show {}\n'.format(self.options['n']).encode())
 
-        s.send("language {}\n".format(self.options['l']).encode())
+        s.send('language {}\n'.format(self.options['l']).encode())
         recv = s.recv(1024)
-        if recv == "no":
-            s.send(b"end\n")
+        if recv == 'no':
+            s.send(b'end\n')
             s.close()
-            raise Exception("send() => Language not accepted by server")
+            raise Exception('send() => Language not accepted by server')
 
         for file_path, display_name in self.base_files:
-            self.uploadFile(s, file_path, display_name, 0)
+            self.upload_file(s, file_path, display_name)
 
         index = 1
         for file_path, display_name in self.files:
-            self.uploadFile(s, file_path, display_name, index)
+            self.upload_file(s, file_path, display_name, index)
             index += 1
 
-        s.send("query 0 {}\n".format(self.options['c']).encode())
+        s.send('query 0 {}\n'.format(self.options['c']).encode())
 
         response = s.recv(1024)
 
-        s.send(b"end\n")
+        s.send(b'end\n')
         s.close()
 
-        return response.decode().replace("\n","")
+        return response.decode().replace('\n', '')
 
-    def saveWebPage(self, url, path):
+    def save_page(self, url, path):
         if len(url) == 0:
-            raise Exception("Empty url supplied")
+            raise Exception('Empty url supplied')
 
         response = urlopen(url)
         content = response.read()

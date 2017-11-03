@@ -4,14 +4,14 @@ A Python client for [Moss](http://theory.stanford.edu/~aiken/moss/): A System fo
 
 ## Introduction
 
-It is a Python interface for [Moss](http://theory.stanford.edu/~aiken/moss/) client. It was written for [AutoGrader](https://github.com/BilalZaib/AutoGrader) for handling similarity in Python assignment submission. 
+It is a Python interface for [Moss](http://theory.stanford.edu/~aiken/moss/) client. It was written for [AutoGrader](https://github.com/BilalZaib/AutoGrader) for handling similarity in Python assignment submission.
 
 It was written using the [original bash script/documentation](http://moss.stanford.edu/general/scripts.html) and its [PHP](https://github.com/Phhere/MOSS-PHP) dialect.
 
 ### Installation
- 
+
 ```shell
-pip install mosspy
+pip install git+https://github.com/leVirve-arxiv/moss.py
 ```
 
 ### Usage
@@ -47,7 +47,7 @@ mosspy.download_report(url, "submission/report/", connections=8)
 
 ## Similar Project
 
-* [ocaml-moss](https://github.com/Chris00/ocaml-moss) OCaml client 
+* [ocaml-moss](https://github.com/Chris00/ocaml-moss) OCaml client
 * [cl-moss](https://github.com/wsgac/cl-moss) Common Lisp
 * [moji](https://github.com/nordicway/moji) Java version
 * [MOSS-PHP](https://github.com/Phhere/MOSS-PHP) PHP version
